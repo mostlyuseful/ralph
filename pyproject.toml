@@ -1,0 +1,22 @@
+[project]
+name = "ralph"
+version = "0.1.0"
+description = "My take on the ralph loop"
+readme = "README.md"
+authors = [
+    { name = "Maurice-Pascal Sonnemann", email = "mpsonnemann@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+    "pydantic>=2.12.5",
+    "typer>=0.21.1",
+]
+
+[project.scripts]
+ralph = "ralph.cli:app"
+frink = "ralph.prof_frink:app"
+
+[build-system]
+requires = ["uv_build>=0.9.22,<0.10.0"]
+build-backend = "uv_build"
