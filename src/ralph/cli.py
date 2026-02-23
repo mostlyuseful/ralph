@@ -42,6 +42,9 @@ def main(
 
         checked_before = count_checked("prd.md")
 
+        # Print next task in green for visibility:
+        print(f"\nNext task:\n\033[92m{next_task}\033[0m\n")
+
         try:
             status_before = load_status()
             if status_before.user_input_required and not user_input:
@@ -71,10 +74,11 @@ def main(
 
         if delta > expected_checkboxes:
             print(
-                f"⚠️  Agent ticked {delta} boxes but was scoped to {expected_checkboxes}. "
-                f"Reverting to last commit."
+                f"⚠️  Agent ticked {delta} boxes but was scoped to {expected_checkboxes}."
             )
-            subprocess.run(["git", "checkout", "HEAD~1", "--", "prd.md"])
+            subprocess.run(["git", "diff", "HEAD~1", "--", "prd.md"])
+            if typer.confirm("Revert prd.md to last commit?"):
+                subprocess.run(["git", "checkout", "HEAD~1", "--", "prd.md"])
 
         status = print_status()
         if status.next_task is None:
