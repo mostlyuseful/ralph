@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 import subprocess
 
+from pydantic import ValidationError
 import typer
 
 from ralph.instructions import get_instructions
@@ -16,6 +17,9 @@ app = typer.Typer()
 def main(
     max_iterations: int = typer.Option(
         1, help="Maximum number of ralph iterations to run"
+    ),
+    interactive: bool = typer.Option(
+        False, help="Run opencode in interactive mode. Setting to false will run in non-interactive mode, which is better for automation but may not work well with use cases that requires frequent user steering."
     ),
     user_input: str = typer.Option(
         "",
@@ -58,6 +62,9 @@ def main(
                     )
         except FileNotFoundError:
             logging.info("No existing status found, starting fresh.")
+        except ValidationError:
+            logging.exception("Existing status file is malformed")
+            print(f"The status file looks like this:\n{Path('status.json').read_text()}")
 
         instructions = get_instructions(
             instructions_path,
@@ -68,7 +75,7 @@ def main(
         )
 
         expected_checkboxes = next_task.count("- [ ]")
-        run_opencode(instructions, model=model)
+        run_opencode(instructions, model=model, interactive=interactive)
         checked_after = count_checked("prd.md")
         delta = checked_after - checked_before
 
@@ -80,10 +87,14 @@ def main(
             if typer.confirm("Revert prd.md to last commit?"):
                 subprocess.run(["git", "checkout", "HEAD~1", "--", "prd.md"])
 
-        status = print_status()
-        if status.next_task is None:
-            logging.info("All tasks completed. Exiting.")
-            raise typer.Exit()
+        try:
+            status = print_status()
+            if status.next_task is None:
+                logging.info("All tasks completed. Exiting.")
+                raise typer.Exit()
+        except ValidationError:
+            logging.exception("Generated status file is malformed")
+            print(f"The status file looks like this:\n{Path('status.json').read_text()}")
 
 
 if __name__ == "__main__":

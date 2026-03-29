@@ -1,7 +1,6 @@
-import json
 import subprocess
 
-def run_opencode(instructions: str, model: str|None = None):
+def run_opencode(instructions: str, model: str|None = None, interactive: bool = False):
     # proc = subprocess.Popen(
     #     [
     #         "opencode",
@@ -22,12 +21,23 @@ def run_opencode(instructions: str, model: str|None = None):
     #     # Each line is a JSON payload
     #     #payload = json.loads(line)
     # proc.wait()
-    subprocess.run(
-        [
-            "opencode",
-            "run",
-            *(["--model", model] if model else []),
-            instructions,
-        ],
-        check=True,
-    )
+    if interactive:
+        subprocess.run(
+            [
+                "opencode",
+                *(["--model", model] if model else []),
+                "--prompt",
+                instructions,
+            ],
+            check=True,
+        )
+    else:
+        subprocess.run(
+            [
+                "opencode",
+                "run",
+                *(["--model", model] if model else []),
+                instructions,
+            ],
+            check=True,
+        )
